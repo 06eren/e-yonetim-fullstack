@@ -19,6 +19,7 @@ export default function Giris() {
   const [showPassword, setShowPassword] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [developmentCode, setDevelopmentCode] = useState<string | undefined>(undefined);
   const handleTcChange = (e: ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.replace(/\D/g, "");
     if (val.length <= 11) {
@@ -50,6 +51,7 @@ export default function Giris() {
         toast.success("Bilgiler doğru. SMS doğrulaması gerekiyor.");
         setTelefon(response.telefon);         // masked - for display
         setRawTelefon(response.rawTelefon ?? response.telefon ?? ""); // real - for verify
+        setDevelopmentCode(response.developmentCode);
         setStep(2);
       }
     } catch (error) {
@@ -176,6 +178,7 @@ export default function Giris() {
             <SmsVerificationForm
               telefon={telefon}
               verifyTelefon={rawTelefon}
+              developmentCode={developmentCode}
               onBack={() => setStep(1)}
               onSuccess={handleSmsSuccess}
               type="login"

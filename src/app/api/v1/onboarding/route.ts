@@ -1,5 +1,4 @@
 import { NextRequest } from "next/server";
-import { Prisma } from "@prisma/client";
 import { prisma } from "@/server/db/prisma";
 import { createProtectedRouteHandler } from "@/server/lib/protected-route";
 import { ok } from "@/server/lib/response";
@@ -32,11 +31,13 @@ export const PUT = createProtectedRouteHandler(async (request: NextRequest, sess
       tenantId: session.tenantId,
       key: payload.key,
       completed: payload.completed,
-      payload: payload.data ? (payload.data as Prisma.InputJsonValue) : Prisma.JsonNull,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      payload: (payload.data ?? null) as any,
     },
     update: {
       completed: payload.completed,
-      payload: payload.data ? (payload.data as Prisma.InputJsonValue) : Prisma.JsonNull,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      payload: (payload.data ?? null) as any,
     },
   });
 

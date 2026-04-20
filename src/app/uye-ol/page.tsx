@@ -11,6 +11,7 @@ export default function UyeOl() {
   const [userData, setUserData] = useState<any>(null);
   const [isSuccess, setIsSuccess] = useState(false);
   const [firmaKodu, setFirmaKodu] = useState("");
+  const [developmentCode, setDevelopmentCode] = useState<string | undefined>(undefined);
 
   const persistAnaKullaniciOnboarding = (data: any, tel: string) => {
     const targetAnaKullaniciData = {
@@ -59,6 +60,7 @@ export default function UyeOl() {
                 onSuccess={(data: any) => {
                   setTelefon(data.telefon);
                   setUserData(data);
+                  setDevelopmentCode(data.developmentCode);
                   // NetGSM responseCode=30 bypass durumunda backend session acmis sayilir.
                   if (data.smsBypassed && data.firmaKodu) {
                     setFirmaKodu(data.firmaKodu);
@@ -73,6 +75,7 @@ export default function UyeOl() {
               <SmsVerificationForm
                 telefon={telefon}
                 type="register"
+                developmentCode={developmentCode}
                 onBack={() => setStep(1)}
                 onSuccess={(kodu) => {
                   // kodu = firmaKodu returned from verifySmsAndCreateSession after real DB creation

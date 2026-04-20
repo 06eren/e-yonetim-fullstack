@@ -4,7 +4,7 @@ import { User, Mail, Phone, Lock, Eye, EyeOff, CheckCircle2, MessageSquare, X, L
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { AuthService } from "@/services/auth.service";
-export default function RegistrationForm({ onSuccess }: { onSuccess: (data: { telefon: string, adSoyad: string, tckn: string, eposta: string, firmaKodu?: string, smsBypassed?: boolean }) => void }) {
+export default function RegistrationForm({ onSuccess }: { onSuccess: (data: { telefon: string, adSoyad: string, tckn: string, eposta: string, firmaKodu?: string, smsBypassed?: boolean, developmentCode?: string }) => void }) {
   const router = useRouter();
   const [adSoyad, setAdSoyad] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -44,7 +44,7 @@ export default function RegistrationForm({ onSuccess }: { onSuccess: (data: { te
       const response = await AuthService.register({ adSoyad, tckn, eposta, telefon, sifre, kvkkOnay });
       if (response.success) {
         toast.success("Kayıt başarılı. SMS doğrulama adımına geçiliyor.");
-        onSuccess({ telefon: response.telefon, adSoyad, tckn, eposta, firmaKodu: response.firmaKodu, smsBypassed: response.smsBypassed });
+        onSuccess({ telefon: response.telefon, adSoyad, tckn, eposta, firmaKodu: response.firmaKodu, smsBypassed: response.smsBypassed, developmentCode: response.developmentCode });
       }
     } catch (error) {
       const msg = error instanceof Error ? error.message : "Kayıt başarısız oldu.";

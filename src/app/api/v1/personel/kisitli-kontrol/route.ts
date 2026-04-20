@@ -60,7 +60,7 @@ export const GET = createProtectedRouteHandler(async (request: NextRequest, sess
       take: 100,
     });
 
-    const redliTalep = redliTalepler.find((t) => {
+    const redliTalep = redliTalepler.find((t: typeof redliTalepler[number]) => {
       const p = t.payload && typeof t.payload === "object" ? (t.payload as Record<string, unknown>) : {};
       const formBilgileri = p.formBilgileri && typeof p.formBilgileri === "object"
         ? (p.formBilgileri as Record<string, unknown>)

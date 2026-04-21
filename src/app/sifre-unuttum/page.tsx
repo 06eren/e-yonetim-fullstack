@@ -19,8 +19,7 @@ export default function SifreUnuttum() {
   const [firmaKodu, setFirmaKodu] = useState("");
   
   const [yeniSifre, setYeniSifre] = useState("");
-  const [smsKodu, setSmsKodu] = useState(""); // SMS formdan donecek olan kod veya ayrica tutulabilen
-  const [developmentCode, setDevelopmentCode] = useState<string | undefined>(undefined);
+  const [smsKodu, setSmsKodu] = useState("");
   
   const [isLoading, setIsLoading] = useState(false);
 
@@ -61,8 +60,7 @@ export default function SifreUnuttum() {
     if (!isSifreFormValid || isLoading) return;
     setIsLoading(true);
     try {
-      const resp = await AuthService.sendForgotPasswordSms({ firmaKodu, tckn, telefon });
-      setDevelopmentCode(resp.developmentCode);
+      await AuthService.sendForgotPasswordSms({ firmaKodu, tckn, telefon });
       toast.success("Şifre sıfırlama kodunuz SMS olarak gönderildi.");
       setStep(2);
     } catch (error) {
@@ -242,7 +240,6 @@ export default function SifreUnuttum() {
             <SmsVerificationForm
               telefon={telefon}
               type="forgot_password"
-              developmentCode={developmentCode}
               onBack={() => setStep(1)}
               onSuccess={() => {
                 setStep(3);

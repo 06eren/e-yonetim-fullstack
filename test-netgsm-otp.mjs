@@ -10,7 +10,7 @@ async function testSmsOtp() {
   const usercode = getEnvValue("NETGSM_USERNAME");
   const password = getEnvValue("NETGSM_PASSWORD");
   const msgheader = getEnvValue("NETGSM_HEADER");
-  const appkey = getEnvValue("NETGSM_APPKEY") || "01007a72af089606218e04d553a740f5"; // Env'de yoksa kendi appkey'iniz
+  const appkey = getEnvValue("NETGSM_APPKEY") || "01007a72af089606218e04d553a740f5"; //kendi appkey'iniz
   
   const contactNumber = "05510739380"; // Istediğiniz Numara
   const otp = "123456";

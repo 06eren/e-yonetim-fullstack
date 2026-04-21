@@ -10,6 +10,6 @@ export const POST = createRouteHandler(async (request: NextRequest) => {
   checkRateLimit(request, "auth-resend-sms");
   const payload = validateSchema(resendSmsSchema, await request.json());
   const result = await resendSmsVerification(payload);
-  return ok({ message: "SMS kodu yeniden gonderildi.", developmentCode: result.developmentCode });
+  return ok({ message: "SMS kodu yeniden gonderildi." });
 });
 

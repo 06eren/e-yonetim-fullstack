@@ -1,37 +1,52 @@
-import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
+import https from 'https';
 
-const prisma = new PrismaClient();
+async function sendSms() {
+  const username = "5437130857";
+  const password = "5D8DF-2"; // Belirttiğin şifre
 
-async function testSms() {
-  const code = '123456';
-  const codeHash = await bcrypt.hash(code, 10);
-  const expiresAt = new Date(Date.now() + 3 * 60 * 1000);
+  const auth = Buffer.from(`${username}:${password}`).toString('base64');
 
-  const input = {
-    telefon: 'vbilmemkacv3',
-    type: 'register',
-    payload: { adSoyad: 'Test', tckn: '12312312311', eposta: 'test@h.com', telefon: '5551234567', sifreHash: 'abc' }
+  // Hata 51 (İYS Hatası) almamak için OTP endpoint'ini deniyoruz
+  // OTP servisinde Türkçe karakter kullanılmaz, bilgin olsun.
+  const postData = JSON.stringify({
+    "msgheader": "HEDABILISIM",
+    "msg": "Deneme mesaji - VPS Test",
+    "no": "5510739380",
+    "appname": "HedaBilisim-ODP"
+  });
+
+  const options = {
+    hostname: 'api.netgsm.com.tr',
+    path: '/sms/rest/v2/otp', // Daha esnek olan OTP endpoint'i
+    method: 'POST',
+    headers: {
+      'Authorization': `Basic ${auth}`,
+      'Content-Type': 'application/json',
+      'Content-Length': Buffer.byteLength(postData)
+    }
   };
 
-  try {
-    const record = await prisma.smsVerification.create({
-      data: {
-        tenantId: input.tenantId || undefined,
-        userId: input.userId || undefined,
-        telefon: '5551234567',
-        type: input.type,
-        codeHash,
-        expiresAt,
-        payload: input.payload ? JSON.parse(JSON.stringify(input.payload)) : undefined
-      },
+  const req = https.request(options, (res) => {
+    let body = '';
+    res.on('data', (d) => body += d);
+    res.on('end', () => {
+      console.log(`Durum Kodu: ${res.statusCode}`);
+      try {
+        const json = JSON.parse(body);
+        console.log('Netgsm Yanıtı:', json);
+
+        if (json.code === "00") {
+          console.log("✅ Mesaj başarıyla gönderildi!");
+        }
+      } catch (e) {
+        console.log('Ham Yanıt:', body);
+      }
     });
-    console.log("Success:", record);
-  } catch (error) {
-    console.error("Prisma Error:", error.message);
-  } finally {
-    await prisma.$disconnect();
-  }
+  });
+
+  req.on('error', (e) => console.error("Hata:", e.message));
+  req.write(postData);
+  req.end();
 }
 
-testSms();
+sendSms();

@@ -16,4 +16,5 @@ export const env = {
   NETGSM_USERNAME: getEnvValue("NETGSM_USERNAME"),
   NETGSM_PASSWORD: getEnvValue("NETGSM_PASSWORD"),
   NETGSM_HEADER: getEnvValue("NETGSM_HEADER"),
+  NETGSM_APPNAME: getEnvValue("NETGSM_APPNAME"),
 };

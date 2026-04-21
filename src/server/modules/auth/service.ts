@@ -71,7 +71,7 @@ async function createAndSendSmsVerification(input: {
     console.log(`======================================================\n`);
   }
 
-  return { ok: true as const, bypassVerify: false as const, verificationId: record.id, developmentCode: code };
+  return { ok: true as const, bypassVerify: false as const, verificationId: record.id };
 }
 
 export async function registerUser(input: {
@@ -93,7 +93,7 @@ export async function registerUser(input: {
   const sifreHash = await bcrypt.hash(input.sifre, 10);
   
   // Sadece SMS verification record olusturalim, kullaniciyi daha DB'ye GERCEKTEN eklemiyoruz!
-  const verificationResult = await createAndSendSmsVerification({
+  await createAndSendSmsVerification({
     telefon: input.telefon,
     type: "register",
     payload: {
@@ -107,9 +107,8 @@ export async function registerUser(input: {
 
   return {
     telefon: input.telefon,
-    firmaKodu: "", // Dogrulama asamasindan sonra alinacak
+    firmaKodu: "",
     smsBypassed: false,
-    developmentCode: verificationResult.developmentCode
   };
 }
 
@@ -137,7 +136,7 @@ export async function loginUser(input: { firmaKodu: string; tckn: string; sifre:
     throw unauthorized("Firma kodu veya kullanici bilgileri hatali.");
   }
 
-  const verificationResult = await createAndSendSmsVerification({
+  await createAndSendSmsVerification({
     tenantId: tenant.id,
     userId: user.id,
     telefon: user.telefon,
@@ -150,7 +149,6 @@ export async function loginUser(input: { firmaKodu: string; tckn: string; sifre:
     userId: user.id,
     tenantId: tenant.id,
     smsBypassed: false,
-    developmentCode: verificationResult.developmentCode
   };
 }
 
@@ -293,12 +291,12 @@ export async function resendSmsVerification(input: { telefon: string; type: "reg
     if (!latestReg || !latestReg.payload) {
       throw notFound("Süresi dolmuş veya hatalı kayıt denemesi. Lütfen baştan başlayın.");
     }
-    const verificationResult = await createAndSendSmsVerification({
+    await createAndSendSmsVerification({
       telefon: normalized,
       type: "register",
       payload: latestReg.payload
     });
-    return { success: true as const, developmentCode: verificationResult.developmentCode };
+    return { success: true as const };
   }
 
   const altPhone = normalized.startsWith("0") ? normalized.slice(1) : normalized;
@@ -310,13 +308,13 @@ export async function resendSmsVerification(input: { telefon: string; type: "reg
   if (!user) {
     throw notFound("Telefon numarasi ile eslesen kullanici bulunamadi.");
   }
-  const verificationResult = await createAndSendSmsVerification({
+  await createAndSendSmsVerification({
     tenantId: user.tenantId,
     userId: user.id,
     telefon: normalized,
     type: input.type,
   });
-  return { success: true as const, developmentCode: verificationResult.developmentCode };
+  return { success: true as const };
 }
 
 export async function refreshSession() {
@@ -393,14 +391,14 @@ export async function sendForgotPasswordSms(input: { firmaKodu: string; tckn: st
   if (!user) throw unauthorized("Bilgiler hatali.");
 
   // Olustur ve gonder
-  const verificationResult = await createAndSendSmsVerification({
+  await createAndSendSmsVerification({
     tenantId: tenant.id,
     userId: user.id,
     telefon: normalized,
     type: "forgot_password"
   });
 
-  return { success: true, telefon: maskPhone(user.telefon), developmentCode: verificationResult.developmentCode };
+  return { success: true, telefon: maskPhone(user.telefon) };
 }
 
 export async function resetPasswordWithSms(input: { telefon: string; yeniSifre: string }) {

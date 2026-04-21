@@ -3,28 +3,26 @@ import { useState, useEffect, FormEvent } from "react";
 import { MessageSquare, Check, CheckCircle2, Loader2, ArrowLeft } from "lucide-react";
 import { AuthService } from "@/services/auth.service";
 import { toast } from "sonner";
+
 export default function SmsVerificationForm({ 
   telefon, 
   verifyTelefon,
-  developmentCode: initialDevelopmentCode,
   onBack, 
   onSuccess,
   type = "register"
 }: { 
   telefon: string,          // display only (can be masked)
   verifyTelefon?: string,   // actual phone for API calls (optional, falls back to telefon)
-  developmentCode?: string, // local development bypass code
   onBack: () => void, 
   onSuccess: (kodu: string) => void,
   type?: "register" | "login" | "forgot_password"
 }) {
-  const apiTelefon = verifyTelefon || telefon; // real phone for API
+  const apiTelefon = verifyTelefon || telefon;
   const [smsKodu, setSmsKodu] = useState("");
   const [timeLeft, setTimeLeft] = useState(270);
   const [isWrongCode, setIsWrongCode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
-  const [currentDevCode, setCurrentDevCode] = useState(initialDevelopmentCode);
 
   useEffect(() => {
     if (timeLeft > 0) {
@@ -32,11 +30,13 @@ export default function SmsVerificationForm({
       return () => clearTimeout(timerId);
     }
   }, [timeLeft]);
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
   };
+
   const handleSmsSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (smsKodu.length !== 6 || isLoading) return;
@@ -54,9 +54,11 @@ export default function SmsVerificationForm({
       setIsLoading(false);
     }
   };
+
   const isSmsTimeout = timeLeft === 0;
   const isSmsLengthError = smsKodu.length > 0 && smsKodu.length < 6;
   const hasSmsError = isSmsTimeout || isSmsLengthError || isWrongCode;
+
   return (
     <div className="animate-slide-right text-center flex flex-col items-center w-full">
       <p className="text-[14px] font-semibold text-[#0052cc] mb-8 px-2 leading-relaxed tracking-wide">
@@ -100,14 +102,6 @@ export default function SmsVerificationForm({
              isSmsLengthError ? "Lütfen 6 haneli kodu eksiksiz giriniz." :
              "Telefonunuza gelen 6 haneli kodu giriniz"}
           </p>
-          
-          {currentDevCode && (
-            <div className="mt-4 p-4 border-2 border-orange-200 bg-orange-50 rounded-xl animate-fade-in text-center">
-              <p className="text-[12px] font-bold text-orange-600 mb-1">SİSTEM ŞU AN TEST MODUNDADIR</p>
-              <p className="text-[14px] text-gray-700">SMS Doğrulama Kodunuz:</p>
-              <p className="text-[24px] font-black text-[#ef5a28] tracking-widest">{currentDevCode}</p>
-            </div>
-          )}
         </div>
         <div className="flex flex-col gap-3.5 w-full mt-8 pb-6">
           <button
@@ -137,10 +131,7 @@ export default function SmsVerificationForm({
               void (async () => {
                 try {
                   setIsResending(true);
-                  const res = await AuthService.resendSms({ telefon: apiTelefon, type });
-                  if (res.developmentCode) {
-                    setCurrentDevCode(res.developmentCode);
-                  }
+                  await AuthService.resendSms({ telefon: apiTelefon, type });
                   toast.success("Yeni SMS kodu gönderildi.");
                   setTimeLeft(270);
                   setSmsKodu("");

@@ -27,6 +27,7 @@ import { useRouter } from "next/navigation";
 import { loadAyarlar, type SgkAyarlari } from "../ayarlar/page";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { fetchJsonWithError, getApiErrorMessage } from "@/lib/fetchJsonWithError";
+import ilIlceData from "@/utils/il_ilce.json";
 
 const TURKIYE_ILLERI = [
   "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin",
@@ -40,6 +41,15 @@ const TURKIYE_ILLERI = [
   "Aksaray", "Bayburt", "Karaman", "Kırıkkale", "Batman", "Şırnak", "Bartın", "Ardahan",
   "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce"
 ].sort();
+
+const TURKIYE_BANKALARI = [
+  "Akbank", "Albaraka Türk", "Alternatif Bank", "Anadolubank", "Burgan Bank",
+  "Citibank", "DenizBank", "Emlak Katılım", "Fibabanka", "Garanti BBVA",
+  "Halkbank", "HSBC", "ING Bank", "İş Bankası", "Kuveyt Türk", "Odeabank",
+  "PTT Bank", "QNB", "Şekerbank", "TEB (Türk Ekonomi Bankası)", "Türkiye Finans",
+  "Vakıf Katılım", "VakıfBank", "Yapı Kredi", "Ziraat Bankası", "Ziraat Katılım",
+  "Diğer"
+].sort((a, b) => a.localeCompare(b, 'tr'));
 
 
 const ZORUNLU_EVRAKLAR = [
@@ -82,6 +92,80 @@ const TextField = ({ label, value, onChange, placeholder = "", type = "text", re
     />
   </div>
 );
+
+const CurrencyField = ({ label, value, onChange, placeholder = "0", required = false, disabled = false }: any) => {
+  const displayValue = value ? value.toString().replace(" ₺", "") : "";
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let rawValue = e.target.value.replace(/\D/g, "");
+    if (!rawValue) {
+      onChange("");
+      return;
+    }
+    const formattedValue = new Intl.NumberFormat('tr-TR').format(Number(rawValue));
+    onChange(formattedValue + " ₺");
+  };
+
+  return (
+    <div className={`flex flex-col gap-1.5 ${disabled ? 'opacity-60 pointer-events-none' : ''}`}>
+      <label className="text-[12px] font-extrabold text-[#172b4d] flex items-center gap-1">
+        {label} {required && !disabled && <span className="text-red-500">*</span>}
+      </label>
+      <div className="relative">
+        <input
+          type="text"
+          value={displayValue}
+          onChange={handleChange}
+          placeholder={placeholder}
+          disabled={disabled}
+          className={`w-full px-4 py-2.5 pr-8 rounded-xl border-2 border-gray-100 outline-none text-[13.5px] font-medium text-[#172b4d] transition-all placeholder:text-gray-400 ${disabled ? 'bg-gray-50 text-gray-400 border-gray-100 cursor-not-allowed' : 'hover:border-gray-200 focus:border-[#ef5a28] focus:ring-4 focus:ring-[#ef5a28]/10'}`}
+        />
+        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[13.5px] font-bold text-gray-500 pointer-events-none">
+          ₺
+        </span>
+      </div>
+    </div>
+  );
+};
+
+const PhoneField = ({ label, value, onChange, placeholder = "05XX XXX XX XX", required = false, disabled = false }: any) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let rawValue = e.target.value.replace(/\D/g, "");
+    if (rawValue.length > 11) rawValue = rawValue.slice(0, 11);
+    
+    if (rawValue.length > 0 && rawValue[0] !== '0') {
+      rawValue = '0' + rawValue;
+      if (rawValue.length > 11) rawValue = rawValue.slice(0, 11);
+    }
+
+    let formatted = "";
+    for (let i = 0; i < rawValue.length; i++) {
+      if (i === 4 || i === 7 || i === 9) {
+        formatted += " ";
+      }
+      formatted += rawValue[i];
+    }
+    
+    onChange(formatted);
+  };
+
+  return (
+    <div className={`flex flex-col gap-1.5 ${disabled ? 'opacity-60 pointer-events-none' : ''}`}>
+      <label className="text-[12px] font-extrabold text-[#172b4d] flex items-center gap-1">
+        {label} {required && !disabled && <span className="text-red-500">*</span>}
+      </label>
+      <input
+        type="text"
+        value={value}
+        onChange={handleChange}
+        placeholder={placeholder}
+        disabled={disabled}
+        maxLength={15}
+        className={`w-full px-4 py-2.5 rounded-xl border-2 border-gray-100 outline-none text-[13.5px] font-medium text-[#172b4d] transition-all placeholder:text-gray-400 ${disabled ? 'bg-gray-50 text-gray-400 border-gray-100 cursor-not-allowed' : 'hover:border-gray-200 focus:border-[#ef5a28] focus:ring-4 focus:ring-[#ef5a28]/10'}`}
+      />
+    </div>
+  );
+};
 
 const SelectField = ({ label, value, onChange, options, required = false, disabled = false, freeText = false }: any) => {
   const isOptionsEmpty = !Array.isArray(options) || options.length === 0;
@@ -462,7 +546,7 @@ export default function SgkGirisYeniTalepPage() {
   ] as Array<keyof SgkGirisFormState>;
 
   const requiredFields2 = [
-    'firmaAdi', 'subeAdi', 'departman', 'birim', 'gorevi', 'takimi',
+    'firmaAdi', 'subeAdi', 'departman', 'birim', 'gorevi',
     'kadroStatusu', 'isyeriLokasyonu', 'netMaasi', 'brutMaasi',
     'yemekUcreti', 'yolUcreti', 'servisKullanimi', 'sabitEkOdeme',
     'iseBaslamaTarihi', 'mesaiBaslangic', 'mesaiBitis', 'calismaTuru',
@@ -503,7 +587,7 @@ export default function SgkGirisYeniTalepPage() {
     }
 
     const req2 = ayarlar.zorunluAlanlar.filter(f => 
-      ['firmaAdi', 'subeAdi', 'departman', 'birim', 'gorevi', 'takimi', 'kadroStatusu', 'isyeriLokasyonu', 'netMaasi', 'brutMaasi', 'yemekUcreti', 'yolUcreti', 'servisKullanimi', 'sabitEkOdeme', 'iseBaslamaTarihi', 'mesaiBaslangic', 'mesaiBitis', 'calismaTuru', 'istihdamTuru', 'iseAlimDurumu'].includes(f)
+      ['firmaAdi', 'subeAdi', 'departman', 'birim', 'gorevi', 'kadroStatusu', 'isyeriLokasyonu', 'netMaasi', 'brutMaasi', 'yemekUcreti', 'yolUcreti', 'servisKullanimi', 'sabitEkOdeme', 'iseBaslamaTarihi', 'mesaiBaslangic', 'mesaiBitis', 'calismaTuru', 'istihdamTuru', 'iseAlimDurumu'].includes(f)
     );
     let filled2 = 0;
     let totalReq2 = req2.length;
@@ -967,18 +1051,18 @@ export default function SgkGirisYeniTalepPage() {
             </div>
           </div>
           <div className="grid grid-cols-2 gap-6">
-            <SelectField label="İl" value={formData.il} onChange={(v: string) => updateField('il', v)} options={TURKIYE_ILLERI} required={isRequired('il')} />
-            <SelectField label="İlçe" value={formData.ilce} onChange={(v: string) => updateField('ilce', v)} options={[]} required={isRequired('ilce')} freeText />
+            <SelectField label="İl" value={formData.il} onChange={(v: string) => { updateField('il', v); updateField('ilce', ''); }} options={TURKIYE_ILLERI} required={isRequired('il')} />
+            <SelectField label="İlçe" value={formData.ilce} onChange={(v: string) => updateField('ilce', v)} options={formData.il ? ((ilIlceData as Record<string, string[]>)[formData.il] || []) : []} required={isRequired('ilce')} disabled={!formData.il} />
           </div>
           <TextField label="Adres" value={formData.adres} onChange={(v: string) => updateField('adres', v)} required={isRequired('adres')} />
           <div className="grid grid-cols-2 gap-6">
-            <TextField label="Telefon" value={formData.cepTelefonu} onChange={(v: string) => updateField('cepTelefonu', v)} required />
-            <TextField label="E-Posta" value={formData.eposta} onChange={(v: string) => updateField('eposta', v)} required />
+            <PhoneField label="Telefon" value={formData.cepTelefonu} onChange={(v: string) => updateField('cepTelefonu', v)} required={isRequired('cepTelefonu')} />
+            <TextField label="E-Posta" value={formData.eposta} onChange={(v: string) => updateField('eposta', v)} required={isRequired('eposta')} />
           </div>
           <div className="grid grid-cols-3 gap-6">
-            <TextField label="Acil Durumda Ulaşılacak Kişi Adı" value={formData.acilDurumKisisi} onChange={(v: string) => updateField('acilDurumKisisi', v)} required />
-            <SelectField label="Acil Durum Kişisi Yakınlık Derecesi" value={formData.yakinlik} onChange={(v: string) => updateField('yakinlik', v)} options={['Anne', 'Baba', 'Eş', 'Kardeş', 'Arkadaş']} required />
-            <TextField label="Acil Durum Telefon Numarası" value={formData.acilDurumTelefon} onChange={(v: string) => updateField('acilDurumTelefon', v)} required />
+            <TextField label="Acil Durumda Ulaşılacak Kişi Adı" value={formData.acilDurumKisisi} onChange={(v: string) => updateField('acilDurumKisisi', v)} required={isRequired('acilDurumKisisi')} />
+            <SelectField label="Acil Durum Kişisi Yakınlık Derecesi" value={formData.yakinlik} onChange={(v: string) => updateField('yakinlik', v)} options={['Anne', 'Baba', 'Eş', 'Kardeş', 'Arkadaş']} required={isRequired('yakinlik')} />
+            <PhoneField label="Acil Durum Telefon Numarası" value={formData.acilDurumTelefon} onChange={(v: string) => updateField('acilDurumTelefon', v)} required={isRequired('acilDurumTelefon')} />
           </div>
         </div>
 
@@ -1066,7 +1150,7 @@ export default function SgkGirisYeniTalepPage() {
           </div>
           <div className="grid grid-cols-2 gap-6">
             <TextField label="IBAN No" value={formData.ibanNo} onChange={(v: string) => updateField('ibanNo', v)} required />
-            <SelectField label="Banka Adı" value={formData.bankaAdi} onChange={(v: string) => updateField('bankaAdi', v)} options={['Ziraat Bankası', 'Garanti BBVA', 'İş Bankası', 'Akbank']} required />
+            <SelectField label="Banka Adı" value={formData.bankaAdi} onChange={(v: string) => updateField('bankaAdi', v)} options={TURKIYE_BANKALARI} required />
           </div>
           <TextField label="Şube Adı" value={formData.bankaSube} onChange={(v: string) => updateField('bankaSube', v)} required />
         </div>
@@ -1091,7 +1175,6 @@ export default function SgkGirisYeniTalepPage() {
               }
               if (progress1 < 100) {
                 toast.error(`Zorunlu alanların henüz %${progress1} kısmını tamamladınız. Lütfen eksik alanları doldurunuz.`);
-                setCurrentStep(2);
               } else {
                 toast.success("Bilgiler başarıyla kaydedildi, 2. Adıma geçiliyor!");
                 setCurrentStep(2);
@@ -1135,7 +1218,6 @@ export default function SgkGirisYeniTalepPage() {
               required={isRequired('birim')}
             />
             <AutocompleteField label="Görevi - Mesleği" value={formData.gorevi} onChange={(v: string) => updateField('gorevi', v)} placeholder="Meslek kodu veya adı ile arayın..." required={isRequired('gorevi')} />
-            <SelectField label="Takımı - Sınıfı" value={formData.takimi} onChange={(v: string) => updateField('takimi', v)} options={['A Takımı', 'B Takımı']} />
 
             <TextField label="Ekip Sorumlusu" value={formData.ekipSorumlusu} onChange={(v: string) => updateField('ekipSorumlusu', v)} />
             <SelectField label="Kadro Statüsü (Mavi / Beyaz / Yönetici)" value={formData.kadroStatusu} onChange={(v: string) => updateField('kadroStatusu', v)} options={['Mavi Yaka', 'Beyaz Yaka', 'Yönetici']} />
@@ -1157,8 +1239,8 @@ export default function SgkGirisYeniTalepPage() {
             </div>
           </div>
           <div className="grid grid-cols-2 gap-8">
-            <TextField label="Net Maaşı" value={formData.netMaasi} onChange={(v: string) => updateField('netMaasi', v)} />
-            <TextField label="Brüt Maaşı" value={formData.brutMaasi} onChange={(v: string) => updateField('brutMaasi', v)} />
+            <CurrencyField label="Net Maaşı" value={formData.netMaasi} onChange={(v: string) => updateField('netMaasi', v)} required={isRequired('netMaasi')} />
+            <CurrencyField label="Brüt Maaşı" value={formData.brutMaasi} onChange={(v: string) => updateField('brutMaasi', v)} required={isRequired('brutMaasi')} />
 
             <SelectField label="Yemek Ücreti Ödemesi (Var / Yok)" value={formData.yemekUcreti} onChange={(v: string) => updateField('yemekUcreti', v)} options={['Yok', 'Var']} />
             <SelectField label="Yol Ücreti Ödemesi (Var / Yok)" value={formData.yolUcreti} onChange={(v: string) => updateField('yolUcreti', v)} options={['Yok', 'Var']} />
@@ -1246,7 +1328,6 @@ export default function SgkGirisYeniTalepPage() {
             onClick={() => {
               if (progress2 < 100) {
                 toast.error(`Zorunlu alanların henüz %${progress2} kısmını tamamladınız. Lütfen eksik alanları doldurunuz.`);
-                setCurrentStep(3);
               } else {
                 toast.success("Bilgiler başarıyla kaydedildi, 3. Adıma geçiliyor!");
                 setCurrentStep(3);
